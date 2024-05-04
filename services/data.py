@@ -15,4 +15,4 @@ class FileManager:
     def write(self, data: Iterable[Iterable[str]]) -> None:
         with open(self.path, "a+") as file:
             writer = csv.writer(file)
-            writer.writerows(data)
+            writer.writerow(data)
