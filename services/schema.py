@@ -1,6 +1,6 @@
 import datetime
 
-from attr import define, field, Factory
+from attr import define, field, Factory, fields
 
 from services.enums import Category
 
@@ -16,3 +16,9 @@ class FinancialOperation:
     def check(self, attribute, value):
         if value < 0:
             raise ValueError("Operation sum must be greater than zero")
+
+    def __str__(self):
+        return "\n".join(
+            "%s: %s" % (field.name, getattr(self, field.name))
+            for field in fields(self.__class__)
+        )
