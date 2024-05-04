@@ -1,16 +1,18 @@
 import datetime
-from dataclasses import dataclass, field
+
+from attr import define, field, Factory
 
 from services.enums import Category
 
 
-@dataclass
+@define
 class FinancialOperation:
-    summ: int
+    summ: int = field(converter=int)
     category: Category
     description: str
-    date: datetime.date = field(init=True, default_factory=datetime.date.today)
+    date: datetime.date = Factory(datetime.date.today)
 
-    def __post_init__(self):
-        if self.summ < 0:
+    @summ.validator
+    def check(self, attribute, value):
+        if value < 0:
             raise ValueError("Operation sum must be greater than zero")

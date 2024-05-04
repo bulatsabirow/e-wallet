@@ -1,6 +1,9 @@
 import csv
 from collections.abc import Generator, Iterable
+from dataclasses import astuple
 from pathlib import Path
+
+from services.schema import FinancialOperation
 
 
 class FileManager:
@@ -9,10 +12,13 @@ class FileManager:
 
     def read(self) -> Generator[str, None, None]:
         with open(self.path, "r") as file:
-            for line in csv.reader(file):
-                yield line
+            lines = csv.reader(file)
+            # Skip first element as it contains table headers
+            next(lines)
+            for line in lines:
+                yield FinancialOperation(*line)
 
-    def write(self, data: Iterable[Iterable[str]]) -> None:
+    def write(self, data: FinancialOperation) -> None:
         with open(self.path, "a+") as file:
             writer = csv.writer(file)
-            writer.writerow(data)
+            writer.writerow(astuple(data))
