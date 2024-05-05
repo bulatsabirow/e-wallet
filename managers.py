@@ -1,5 +1,4 @@
 import argparse
-import sys
 
 from commands import AddRecordCommand, ShowBalanceCommand, FilterRecordCommand
 
@@ -18,8 +17,4 @@ class CommandManager:
 
     def execute(self):
         command = self.parser.parse_known_args()[0].command
-        # TODO sys.stdout in command classes
-        command_execution_result = self.command_list[command](self.parser)()
-        # Print command execution result
-        sys.stdout.write(str(command_execution_result))
-        sys.stdout.write("\n")
+        self.command_list[command](self.parser)()

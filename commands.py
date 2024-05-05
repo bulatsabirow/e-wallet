@@ -7,7 +7,7 @@ from operator import add, attrgetter, neg, pos
 from random import randint
 from typing import NoReturn
 
-from attrs import asdict
+from attr import asdict
 
 from services.data import FileManager
 from services.enums import Category
@@ -53,6 +53,8 @@ class AddRecordCommand(BaseCommand):
 
         instance = FinancialOperation(**kwargs)
         self.file_manager.write(instance)
+        sys.stdout.write(str(instance.id))
+        sys.stdout.write("\n")
 
 
 class ShowBalanceCommand(BaseCommand):
@@ -92,7 +94,10 @@ class ShowBalanceCommand(BaseCommand):
                 else -operation.summ
             )
 
-        return reduce(add, map(get_summ, self.file_manager.read()))
+        sys.stdout.write(
+            str(reduce(add, map(get_summ, self.file_manager.read(convert=True)), 0))
+        )
+        sys.stdout.write("\n")
 
 
 class FilterRecordCommand(BaseCommand):
@@ -121,13 +126,39 @@ class FilterRecordCommand(BaseCommand):
         filter_kwargs.pop("command")
 
         for operation in self.file_manager.read():
-            operation_dict = asdict(operation)
             # TODO filtering in other function
             if all(
                 filter_value is None
-                or filter_value == operation_dict.get(filter_kwarg, None)
+                or filter_value == operation.get(filter_kwarg, None)
                 for filter_kwarg, filter_value in filter_kwargs.items()
             ):
                 sys.stdout.write(str(operation))
                 sys.stdout.write("\n")
                 sys.stdout.write("\n")
+
+
+class EditRecordCommand(BaseCommand):
+    def __init__(self, parser) -> None:
+        super().__init__(parser)
+        self.parser.description = "Allows edit record data"
+        self.parser.add_argument("--summ", "-s", type=int, help="Sum")
+        # TODO enum action
+        self.parser.add_argument(
+            "--category",
+            "-c",
+            choices=[Category.income.value, Category.expense.value],
+            help="Category",
+        )
+        self.parser.add_argument("--description", "-d", type=str, help="Description")
+        self.parser.add_argument(
+            "--date",
+            required=False,
+            type=str,
+            help="Date",
+        )
+
+    def __call__(self):
+        data = self.parser.parse_args()
+        for operation in self.file_manager.read():
+            if operation.get("id") == data.id:
+                operation.update(data.__dict__)
