@@ -9,6 +9,14 @@ from typing import NoReturn
 
 from attr import asdict
 
+from commands.actions import EnumAction
+from commands.config import (
+    ADD_RECORD_COMMAND_CONFIG,
+    SHOW_BALANCE_COMMAND_CONFIG,
+    FILTER_RECORD_COMMAND_CONFIG,
+    EDIT_RECORD_COMMAND_CONFIG,
+)
+from commands.typing import CommandArguments
 from services.data import FileManager
 from services.enums import Category
 from services.schema import FinancialOperation
@@ -16,55 +24,44 @@ from services.schema import FinancialOperation
 
 class BaseCommand:
     file_manager = FileManager()
+    arguments_config: list[CommandArguments] = []
+
+    def init_config(self):
+        for config in self.arguments_config:
+            self.parser.add_argument(*config.pop("name_or_flags"), **config)
 
     def __init__(self, parser, *args, **kwargs):
         self.parser = argparse.ArgumentParser(parents=[parser])
+        self.init_config()
 
 
 class AddRecordCommand(BaseCommand):
+    arguments_config = ADD_RECORD_COMMAND_CONFIG
+
     def __init__(self, parser) -> None:
         super().__init__(parser)
         self.parser.description = "Adds record to incomes/expenses data storage"
-        self.parser.add_argument("--summ", "-s", type=int, help="Sum")
-        # TODO enum action
-        self.parser.add_argument(
-            "--category",
-            "-c",
-            choices=[Category.income.value, Category.expense.value],
-            help="Category",
-        )
-        self.parser.add_argument("--description", "-d", type=str, help="Description")
-        self.parser.add_argument(
-            "--date",
-            required=False,
-            default=datetime.date.today(),
-            type=str,
-            help="Date",
-        )
 
     def __call__(self):
         data = self.parser.parse_args()
         kwargs = {
-            "summ": data.summ,
-            "category": data.category,
-            "description": data.description,
-            "date": data.date,
+            field: getattr(data, field) for field in FinancialOperation.fieldnames()
         }
-
         instance = FinancialOperation(**kwargs)
+
         self.file_manager.write(instance)
         sys.stdout.write(str(instance.id))
         sys.stdout.write("\n")
 
 
 class ShowBalanceCommand(BaseCommand):
+    arguments_config = SHOW_BALANCE_COMMAND_CONFIG
+
     def __init__(self, parser) -> None:
         super().__init__(parser)
         self.parser.description = (
             "Shows user current balance or summary incomes/expenses"
         )
-        self.parser.add_argument("--only-incomes", default=False, action="store_true")
-        self.parser.add_argument("--only-expenses", default=False, action="store_true")
 
     def __call__(self):
         data = self.parser.parse_args()
@@ -101,24 +98,11 @@ class ShowBalanceCommand(BaseCommand):
 
 
 class FilterRecordCommand(BaseCommand):
+    arguments_config = FILTER_RECORD_COMMAND_CONFIG
+
     def __init__(self, parser) -> None:
         super().__init__(parser)
         self.parser.description = "Adds record to incomes/expenses data storage"
-        self.parser.add_argument("--summ", "-s", type=int, help="Sum")
-        # TODO enum action
-        self.parser.add_argument(
-            "--category",
-            "-c",
-            choices=[Category.income.value, Category.expense.value],
-            help="Category",
-        )
-        self.parser.add_argument("--description", "-d", type=str, help="Description")
-        self.parser.add_argument(
-            "--date",
-            required=False,
-            type=str,
-            help="Date",
-        )
 
     def __call__(self):
         data = self.parser.parse_args()
@@ -138,27 +122,23 @@ class FilterRecordCommand(BaseCommand):
 
 
 class EditRecordCommand(BaseCommand):
+    arguments_config = EDIT_RECORD_COMMAND_CONFIG
+
     def __init__(self, parser) -> None:
         super().__init__(parser)
         self.parser.description = "Allows edit record data"
-        self.parser.add_argument("--summ", "-s", type=int, help="Sum")
-        # TODO enum action
-        self.parser.add_argument(
-            "--category",
-            "-c",
-            choices=[Category.income.value, Category.expense.value],
-            help="Category",
-        )
-        self.parser.add_argument("--description", "-d", type=str, help="Description")
-        self.parser.add_argument(
-            "--date",
-            required=False,
-            type=str,
-            help="Date",
-        )
 
     def __call__(self):
         data = self.parser.parse_args()
-        for operation in self.file_manager.read():
-            if operation.get("id") == data.id:
-                operation.update(data.__dict__)
+        edited_fields = {
+            key: value
+            for key, value in data.__dict__.items()
+            if key in FinancialOperation.fieldnames() and value is not None
+        }
+
+        result = self.file_manager.edit(edited_fields)
+        if not result:
+            self.parser.error("Record with entered ID doesn't exist")
+        else:
+            sys.stdout.write(str(data.id))
+            sys.stdout.write("\n")

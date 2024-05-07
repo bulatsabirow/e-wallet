@@ -1,7 +1,9 @@
 import csv
 import os.path
+import shutil
 from collections.abc import Generator, Iterable
 from typing import Union, Any
+from tempfile import NamedTemporaryFile
 
 from attr import asdict
 from pathlib import Path
@@ -37,3 +39,25 @@ class FileManager:
                 writer.writeheader()
 
             writer.writerow(asdict(data))
+
+    def edit(self, edited: dict[str, Any]) -> bool:
+        print(edited)
+        with open(self.path, "r", encoding="utf-8") as file, NamedTemporaryFile(
+            "w+", newline="", delete=False, suffix=".csv", encoding="utf-8"
+        ) as temp_file:
+            reader: Iterable[dict] = csv.DictReader(file)
+            writer = csv.DictWriter(
+                temp_file, fieldnames=FinancialOperation.fieldnames()
+            )
+            writer.writeheader()
+            is_row_found = False
+
+            for row in reader:
+                if edited["id"] == row["id"]:
+                    is_row_found = True
+                    row.update(edited)
+
+                writer.writerow(row)
+
+        shutil.move(temp_file.name, self.path)
+        return is_row_found
