@@ -3,7 +3,11 @@ from attr import asdict
 from faker import Faker
 
 from tests.commands import CommandTestManager
-from tests.schema import TestFinancialOperation, TestFileManager
+from tests.schema import (
+    TestFinancialOperation,
+    TestFileManager,
+    TestFinancialOperationFilterKwargs,
+)
 from utils import AttrDict
 
 fake = Faker()
@@ -12,6 +16,11 @@ fake = Faker()
 @pytest.fixture
 def financial_operation():
     return TestFinancialOperation()
+
+
+@pytest.fixture
+def financial_operation_filter_kwargs():
+    return TestFinancialOperationFilterKwargs()
 
 
 @pytest.fixture
