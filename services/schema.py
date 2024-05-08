@@ -1,9 +1,11 @@
+from collections.abc import Iterable, Collection
+
+import arrow.arrow
 import datetime
 from uuid import uuid4, UUID
 
 from attr import define, field, Factory, fields, AttrsInstance
 
-from services.converters import date_converter
 from services.enums import Category
 
 
@@ -12,9 +14,7 @@ class FinancialOperation(AttrsInstance):
     summ: int = field(converter=int)
     category: Category
     description: str
-    date: datetime.date = field(
-        default=Factory(datetime.date.today), converter=date_converter
-    )
+    date: datetime.date = field(default=Factory(arrow.now().date))
     id: UUID = field(default=Factory(uuid4))
 
     @summ.validator
@@ -29,5 +29,5 @@ class FinancialOperation(AttrsInstance):
         )
 
     @classmethod
-    def fieldnames(cls):
-        return [f.name for f in fields(cls)]
+    def fieldnames(cls, exclude: Iterable[str] = tuple()) -> Collection[str]:
+        return [f.name for f in fields(cls) if f.name not in exclude]

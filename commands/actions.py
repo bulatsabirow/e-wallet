@@ -2,6 +2,15 @@ import argparse
 import enum
 
 
+class CaseInsensitiveTuple(tuple[str]):
+    def __contains__(self, item):
+        # use .lower() method to make tuple case insensitive
+        if isinstance(item, str):
+            return super().__contains__(item.lower())
+
+        return super().__contains__(item)
+
+
 class EnumAction(argparse.Action):
     """
     Argparse action for handling Enums
@@ -18,13 +27,12 @@ class EnumAction(argparse.Action):
             raise TypeError("type must be an Enum when using EnumAction")
 
         # Generate choices from the Enum
-        kwargs.setdefault("choices", tuple(e.value for e in enum_type))
+        kwargs.setdefault("choices", CaseInsensitiveTuple(e.value for e in enum_type))
 
         super(EnumAction, self).__init__(**kwargs)
-        print(self.dest)
         self._enum = enum_type
 
     def __call__(self, parser, namespace, values, option_string=None):
         # Convert value back into an Enum
-        value = self._enum(values)
+        value = self._enum(values).value
         setattr(namespace, self.dest, value)

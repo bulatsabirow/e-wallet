@@ -1,11 +1,12 @@
 import argparse
 import datetime
+import functools
 import sys
 from dataclasses import astuple
 from functools import reduce
 from operator import add, attrgetter, neg, pos
 from random import randint
-from typing import NoReturn
+from typing import NoReturn, Any
 
 from attr import asdict
 
@@ -26,13 +27,12 @@ class BaseCommand:
     file_manager = FileManager()
     arguments_config: list[CommandArguments] = []
 
-    def init_config(self):
+    def init_config(self, parser):
         for config in self.arguments_config:
-            self.parser.add_argument(*config.pop("name_or_flags"), **config)
+            parser.add_argument(*config.pop("name_or_flags"), **config)
 
     def __init__(self, parser, *args, **kwargs):
         self.parser = argparse.ArgumentParser(parents=[parser])
-        self.init_config()
 
 
 class AddRecordCommand(BaseCommand):
@@ -40,12 +40,14 @@ class AddRecordCommand(BaseCommand):
 
     def __init__(self, parser) -> None:
         super().__init__(parser)
+        self.init_config(self.parser)
         self.parser.description = "Adds record to incomes/expenses data storage"
 
     def __call__(self):
         data = self.parser.parse_args()
         kwargs = {
-            field: getattr(data, field) for field in FinancialOperation.fieldnames()
+            field: getattr(data, field)
+            for field in FinancialOperation.fieldnames(exclude=("id",))
         }
         instance = FinancialOperation(**kwargs)
 
@@ -59,6 +61,8 @@ class ShowBalanceCommand(BaseCommand):
 
     def __init__(self, parser) -> None:
         super().__init__(parser)
+        group = self.parser.add_mutually_exclusive_group()
+        self.init_config(group)
         self.parser.description = (
             "Shows user current balance or summary incomes/expenses"
         )
@@ -67,12 +71,6 @@ class ShowBalanceCommand(BaseCommand):
         data = self.parser.parse_args()
 
         def get_summ(operation: FinancialOperation):
-            if data.only_incomes and data.only_expenses:
-                raise self.parser.error(
-                    "--only-incomes and --only-expenses are incompatible arguments "
-                )
-
-            # TODO consider --only-incomes and --only-expenses case
             if data.only_incomes:
                 return (
                     operation.summ if operation.category == Category.income.value else 0
@@ -91,9 +89,7 @@ class ShowBalanceCommand(BaseCommand):
                 else -operation.summ
             )
 
-        sys.stdout.write(
-            str(reduce(add, map(get_summ, self.file_manager.read(convert=True)), 0))
-        )
+        sys.stdout.write(str(sum(map(get_summ, self.file_manager.read()), 0)))
         sys.stdout.write("\n")
 
 
@@ -102,6 +98,7 @@ class FilterRecordCommand(BaseCommand):
 
     def __init__(self, parser) -> None:
         super().__init__(parser)
+        self.init_config(self.parser)
         self.parser.description = "Adds record to incomes/expenses data storage"
 
     def __call__(self):
@@ -109,16 +106,10 @@ class FilterRecordCommand(BaseCommand):
         filter_kwargs = vars(data)
         filter_kwargs.pop("command")
 
-        for operation in self.file_manager.read():
-            # TODO filtering in other function
-            if all(
-                filter_value is None
-                or filter_value == operation.get(filter_kwarg, None)
-                for filter_kwarg, filter_value in filter_kwargs.items()
-            ):
-                sys.stdout.write(str(operation))
-                sys.stdout.write("\n")
-                sys.stdout.write("\n")
+        for operation in self.file_manager.filter(**filter_kwargs):
+            sys.stdout.write(str(operation))
+            sys.stdout.write("\n")
+            sys.stdout.write("\n")
 
 
 class EditRecordCommand(BaseCommand):
@@ -126,6 +117,7 @@ class EditRecordCommand(BaseCommand):
 
     def __init__(self, parser) -> None:
         super().__init__(parser)
+        self.init_config(self.parser)
         self.parser.description = "Allows edit record data"
 
     def __call__(self):
