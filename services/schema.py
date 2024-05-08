@@ -1,4 +1,6 @@
+from argparse import Namespace
 from collections.abc import Iterable, Collection
+from typing import Self
 
 import arrow.arrow
 import datetime
@@ -31,3 +33,12 @@ class FinancialOperation(AttrsInstance):
     @classmethod
     def fieldnames(cls, exclude: Iterable[str] = tuple()) -> Collection[str]:
         return [f.name for f in fields(cls) if f.name not in exclude]
+
+    @classmethod
+    def from_args(cls, args: Namespace) -> Self:
+        return cls(
+            **{
+                field: vars(args).get(field)
+                for field in FinancialOperation.fieldnames(exclude=("id",))
+            }
+        )

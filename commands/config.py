@@ -55,17 +55,18 @@ SHOW_BALANCE_COMMAND_CONFIG = [
         "name_or_flags": ["--only-incomes"],
         "default": False,
         "help": "Consider only incomes",
-        "action": "store_true",
+        "action": "store_const",
+        "const": Category.income.value,
     },
     {
         "name_or_flags": ["--only-expenses"],
         "default": False,
         "help": "Consider only expenses",
-        "action": "store_true",
+        "action": "store_const",
+        "const": Category.expense.value,
     },
 ]
 
-# TODO filter date range
 FILTER_RECORD_COMMAND_CONFIG = get_filter_record_command_config()
 
 EDIT_RECORD_COMMAND_CONFIG = [

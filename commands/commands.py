@@ -2,6 +2,7 @@ import argparse
 import datetime
 import functools
 import sys
+from collections.abc import Iterable
 from dataclasses import astuple
 from functools import reduce
 from operator import add, attrgetter, neg, pos
@@ -45,11 +46,7 @@ class AddRecordCommand(BaseCommand):
 
     def __call__(self):
         data = self.parser.parse_args()
-        kwargs = {
-            field: getattr(data, field)
-            for field in FinancialOperation.fieldnames(exclude=("id",))
-        }
-        instance = FinancialOperation(**kwargs)
+        instance = FinancialOperation.from_args(data)
 
         self.file_manager.write(instance)
         sys.stdout.write(str(instance.id))
@@ -70,26 +67,14 @@ class ShowBalanceCommand(BaseCommand):
     def __call__(self):
         data = self.parser.parse_args()
 
-        def get_summ(operation: FinancialOperation):
-            if data.only_incomes:
-                return (
-                    operation.summ if operation.category == Category.income.value else 0
-                )
+        category = data.only_incomes or data.only_expenses
+        rows: Iterable[FinancialOperation] = (
+            self.file_manager.read()
+            if not category
+            else self.file_manager.filter(category=category)
+        )
 
-            if data.only_expenses:
-                return (
-                    -operation.summ
-                    if operation.category == Category.expense.value
-                    else 0
-                )
-
-            return (
-                operation.summ
-                if operation.category == Category.income.value
-                else -operation.summ
-            )
-
-        sys.stdout.write(str(sum(map(get_summ, self.file_manager.read()), 0)))
+        sys.stdout.write(str(sum(map(attrgetter("summ"), rows))))
         sys.stdout.write("\n")
 
 
