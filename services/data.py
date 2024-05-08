@@ -15,15 +15,13 @@ from services.schema import FinancialOperation
 
 class FileManager:
     schema: AttrsInstance = FinancialOperation
+    path: Path = Path(__file__).parent.parent / "data" / "data.csv"
 
     @property
     def filter_criteria(self):
         return {param: eq for param in self.schema.fieldnames(exclude=["date"])} | {
             "date": between
         }
-
-    def __init__(self):
-        self.path: Path = Path(__file__).parent.parent / "data" / "data.csv"
 
     def filter(self, **kwargs):
         for row in self.read():
