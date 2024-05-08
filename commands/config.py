@@ -27,6 +27,23 @@ def get_filter_record_command_config() -> list[CommandArguments]:
     return config
 
 
+def get_edit_record_command_config() -> list[CommandArguments]:
+    config = deepcopy(ADD_RECORD_COMMAND_CONFIG)
+
+    for option in config:
+        option["required"] = False
+
+    config.append(
+        {
+            "name_or_flags": ["id"],
+            "type": str,
+            "help": "Record ID",
+        }
+    )
+
+    return config
+
+
 ADD_RECORD_COMMAND_CONFIG: list = [
     {"name_or_flags": ["--summ", "-s"], "type": int, "help": "Sum", "required": True},
     {
@@ -69,11 +86,4 @@ SHOW_BALANCE_COMMAND_CONFIG = [
 
 FILTER_RECORD_COMMAND_CONFIG = get_filter_record_command_config()
 
-EDIT_RECORD_COMMAND_CONFIG = [
-    {
-        "name_or_flags": ["id"],
-        "type": str,
-        "help": "Record ID",
-    },
-    *FILTER_RECORD_COMMAND_CONFIG,
-]
+EDIT_RECORD_COMMAND_CONFIG = get_edit_record_command_config()

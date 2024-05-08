@@ -24,4 +24,6 @@ class CommandManager:
 
     def execute(self, *args, **kwargs):
         command = self.parser.parse_known_args(*args, **kwargs)[0].command
+        print("command", command)
+        print(self.command_list[command])
         self.command_list[command](self.parser)(*args, **kwargs)

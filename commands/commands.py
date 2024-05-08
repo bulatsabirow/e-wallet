@@ -48,6 +48,7 @@ class AddRecordCommand(BaseCommand):
         self.parser.description = "Adds record to incomes/expenses data storage"
 
     def __call__(self, *args, **kwargs):
+        print(args, kwargs)
         data = self.parse_args(*args, **kwargs)
         instance = self.schema.from_args(data)
 

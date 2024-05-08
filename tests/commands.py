@@ -6,6 +6,7 @@ from commands.commands import (
     AddRecordCommand,
     ShowBalanceCommand,
     FilterRecordCommand,
+    EditRecordCommand,
 )
 from commands.config import (
     ADD_RECORD_COMMAND_CONFIG,
@@ -26,7 +27,7 @@ class AddRecordTestCommand(BaseTestCommandMixin, AddRecordCommand):
     pass
 
 
-class EditRecordTestCommand(BaseTestCommandMixin, AddRecordCommand):
+class EditRecordTestCommand(BaseTestCommandMixin, EditRecordCommand):
     pass
 
 
