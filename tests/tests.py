@@ -1,6 +1,9 @@
 import itertools
+import sys
 from argparse import ArgumentError
 from collections.abc import Iterable
+from io import StringIO
+from unittest import mock
 
 import pytest
 from attr import asdict
@@ -20,7 +23,14 @@ class BaseTestRecord:
             "--date": financial_operation.date,
         }
         return (
-            (key, *([val] if isinstance(val, str) else val))
+            (
+                key,
+                *(
+                    val
+                    if isinstance(val, Iterable) and not isinstance(val, str)
+                    else [val]
+                ),
+            )
             for key, val in raw_mapping.items()
             if val is not None
         )
@@ -76,7 +86,7 @@ class TestAddRecord(BaseTestRecord):
             )
 
     def test_invalid_summ_parameter(self, command_test_manager, financial_operation):
-        with pytest.raises((ArgumentError, SystemExit)) as exc:
+        with pytest.raises(SystemExit) as exc:
             financial_operation.summ = fake.word()
             self.add_record(command_test_manager, financial_operation)
 
@@ -112,9 +122,34 @@ class TestFilterRecord(BaseTestRecord):
         command_test_manager,
         financial_operation,
         financial_operation_filter_kwargs,
-        capsys,
+        test_file_manager,
     ):
         for _ in range(fake.random_int(100, 1000)):
             self.add_record(command_test_manager, TestFinancialOperation())
 
         self.filter_record(command_test_manager, financial_operation_filter_kwargs)
+
+
+class TestShowBalance(BaseTestRecord):
+    def test_valid_parameters(self, command_test_manager, test_file_manager, capsys):
+        expected_result = 0
+        for _ in range(fake.random_int(100, 1000)):
+            instance = TestFinancialOperation()
+            expected_result += int(instance.summ)
+
+            self.add_record(command_test_manager, instance)
+
+        # intersect console output to check if expected and actual results
+        with mock.patch("sys.stdout", new_callable=StringIO):
+            command_test_manager.execute(["show_balance"])
+            actual_result = int(sys.stdout.getvalue())
+
+            assert expected_result == actual_result
+
+    def test_incompatible_parameters(self, command_test_manager, test_file_manager):
+        with pytest.raises(SystemExit) as exc:
+            command_test_manager.execute(
+                ["show_balance", "--only-incomes", "--only-expenses"]
+            )
+
+        assert exc.value.code == 2

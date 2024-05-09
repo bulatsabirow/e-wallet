@@ -65,17 +65,21 @@ class ShowBalanceCommand(BaseCommand):
             "Shows user current balance or summary incomes/expenses"
         )
 
-    def __call__(self, *args, **kwargs):
-        data = self.parse_args(*args, **kwargs)
-
-        category = data.only_incomes or data.only_expenses
+    def calculate_balance(self, category: bool | Category):
         rows: Iterable[FinancialOperation] = (
             self.file_manager.read()
             if not category
             else self.file_manager.filter(category=category)
         )
+
+        return sum(map(lambda row: int(row.summ), rows))
+
+    def __call__(self, *args, **kwargs):
+        data = self.parse_args(*args, **kwargs)
+
+        category = data.only_incomes or data.only_expenses
         # TODO beautify
-        sys.stdout.write(str(sum(map(attrgetter("summ"), rows))))
+        sys.stdout.write(str(self.calculate_balance(category)))
         sys.stdout.write("\n")
 
 
