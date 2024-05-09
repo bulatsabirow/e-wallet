@@ -1,7 +1,7 @@
 from managers import CommandManager
 
 
-def main():
+def main() -> None:
     CommandManager().execute()
 
 

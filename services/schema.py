@@ -1,11 +1,10 @@
-from argparse import Namespace, ArgumentError
+import datetime
+from argparse import Namespace
 from collections.abc import Iterable, Collection
 from typing import Self
-
-import arrow.arrow
-import datetime
 from uuid import uuid4, UUID
 
+import arrow.arrow
 from attr import define, field, Factory, fields, AttrsInstance
 
 from services.enums import Category

@@ -1,3 +1,6 @@
+from collections.abc import Generator
+from typing import Any
+
 import pytest
 from attr import asdict
 from faker import Faker
@@ -14,17 +17,19 @@ fake = Faker()
 
 
 @pytest.fixture
-def financial_operation():
+def financial_operation() -> TestFinancialOperation:
     return TestFinancialOperation()
 
 
 @pytest.fixture
-def financial_operation_filter_kwargs():
+def financial_operation_filter_kwargs() -> TestFinancialOperationFilterKwargs:
     return TestFinancialOperationFilterKwargs()
 
 
 @pytest.fixture
-def edited_financial_operation_data(financial_operation):
+def edited_financial_operation_data(
+    financial_operation: TestFinancialOperation,
+) -> AttrDict[str, Any]:
     return AttrDict(
         {
             key: None
@@ -37,19 +42,20 @@ def edited_financial_operation_data(financial_operation):
 
 
 @pytest.fixture
-def test_file_manager():
+def test_file_manager() -> TestFileManager:
     return TestFileManager()
 
 
 @pytest.fixture
-def command_test_manager():
+def command_test_manager() -> CommandTestManager:
     return CommandTestManager()
 
 
 @pytest.fixture(scope="function", autouse=True)
-def delete_test_csv_file():
+def delete_test_csv_file() -> Generator[None, None, None]:
     yield
 
+    # delete testing .csv file after every test
     try:
         TestFileManager.path.unlink()
     except FileNotFoundError:

@@ -1,10 +1,7 @@
-import datetime
-from operator import attrgetter
 from pathlib import Path
-from typing import Optional
 
 import arrow
-from attr import define, AttrsInstance, field, Factory
+from attr import define, field, Factory
 from faker import Faker
 
 from services.data import FileManager

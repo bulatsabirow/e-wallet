@@ -1,18 +1,8 @@
-import argparse
-from copy import deepcopy
-
 from commands.commands import (
-    BaseCommand,
     AddRecordCommand,
     ShowBalanceCommand,
     FilterRecordCommand,
     EditRecordCommand,
-)
-from commands.config import (
-    ADD_RECORD_COMMAND_CONFIG,
-    EDIT_RECORD_COMMAND_CONFIG,
-    SHOW_BALANCE_COMMAND_CONFIG,
-    FILTER_RECORD_COMMAND_CONFIG,
 )
 from managers import CommandManager
 from tests.schema import TestFileManager, TestFinancialOperation

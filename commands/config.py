@@ -1,6 +1,5 @@
 import datetime
 from copy import deepcopy
-from uuid import uuid4, UUID
 
 from commands.actions import EnumAction
 from commands.argument_types import DateType
@@ -67,7 +66,7 @@ ADD_RECORD_COMMAND_CONFIG: list = [
     {
         "name_or_flags": ["--date"],
         "type": DateType("YYYY-MM-DD"),
-        "help": "Financial operation date",
+        "help": "Financial operation date in 'YYYY-MM-DD' format",
         "required": False,
         "default": datetime.date.today(),
     },

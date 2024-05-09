@@ -3,11 +3,11 @@ import os.path
 import shutil
 from collections.abc import Generator, Iterable
 from operator import eq
-from typing import Union, Any, Optional, Callable
+from pathlib import Path
 from tempfile import NamedTemporaryFile
+from typing import Any
 
 from attr import asdict, AttrsInstance
-from pathlib import Path
 
 from commands.filter import between
 from services.schema import FinancialOperation
@@ -25,11 +25,15 @@ class FileManager:
 
     def filter(self, **kwargs):
         for row in self.read():
-            for filter_kwarg, filter_value in kwargs.items():
-                if self.filter_criteria.get(filter_kwarg)(
+            # Each row should correspond all filter parameters
+            if all(
+                self.filter_criteria.get(filter_kwarg)(
                     getattr(row, filter_kwarg), filter_value
-                ):
-                    yield row
+                )
+                for filter_kwarg, filter_value in kwargs.items()
+                if filter_value is not None
+            ):
+                yield row
 
     def read(self) -> Generator[AttrsInstance, None, None]:
         with open(self.path, "r", encoding="utf-8") as file:
@@ -61,6 +65,8 @@ class FileManager:
                 if edited["id"] == row["id"]:
                     is_row_found = True
                     row.update(edited)
+                    # validate edited data
+                    self.schema(**row)
 
                 writer.writerow(row)
 

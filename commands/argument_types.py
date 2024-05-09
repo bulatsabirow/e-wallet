@@ -1,5 +1,4 @@
 from argparse import ArgumentTypeError
-from collections.abc import Iterable
 
 import arrow
 

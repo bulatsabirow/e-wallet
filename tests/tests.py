@@ -1,14 +1,13 @@
 import itertools
 import sys
-from argparse import ArgumentError
 from collections.abc import Iterable
 from io import StringIO
 from unittest import mock
 
 import pytest
-from attr import asdict
 from faker import Faker
-from tests.commands import CommandTestManager
+
+from services.enums import Category
 from tests.schema import TestFinancialOperation
 
 fake = Faker()
@@ -135,7 +134,9 @@ class TestShowBalance(BaseTestRecord):
         expected_result = 0
         for _ in range(fake.random_int(100, 1000)):
             instance = TestFinancialOperation()
-            expected_result += int(instance.summ)
+            expected_result += int(instance.summ) * (
+                1 if Category.income.value == instance.category else -1
+            )
 
             self.add_record(command_test_manager, instance)
 
@@ -144,7 +145,7 @@ class TestShowBalance(BaseTestRecord):
             command_test_manager.execute(["show_balance"])
             actual_result = int(sys.stdout.getvalue())
 
-            assert expected_result == actual_result
+            assert abs(expected_result) == actual_result
 
     def test_incompatible_parameters(self, command_test_manager, test_file_manager):
         with pytest.raises(SystemExit) as exc:

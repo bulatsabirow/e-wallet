@@ -1,18 +1,8 @@
 import argparse
-import datetime
-import functools
 import sys
 from collections.abc import Iterable
 from copy import deepcopy
-from dataclasses import astuple
-from functools import reduce
-from operator import add, attrgetter, neg, pos
-from random import randint
-from typing import NoReturn, Any
 
-from attr import asdict
-
-from commands.actions import EnumAction
 from commands.config import (
     ADD_RECORD_COMMAND_CONFIG,
     SHOW_BALANCE_COMMAND_CONFIG,
@@ -71,14 +61,22 @@ class ShowBalanceCommand(BaseCommand):
             if not category
             else self.file_manager.filter(category=category)
         )
-
-        return sum(map(lambda row: int(row.summ), rows))
+        # summarize and detect operation category (income or expense) to get expected result
+        return abs(
+            sum(
+                map(
+                    lambda row: int(row.summ)
+                    * (1 if row.category == Category.income.value else -1),
+                    rows,
+                )
+            )
+        )
 
     def __call__(self, *args, **kwargs):
         data = self.parse_args(*args, **kwargs)
 
         category = data.only_incomes or data.only_expenses
-        # TODO beautify
+
         sys.stdout.write(str(self.calculate_balance(category)))
         sys.stdout.write("\n")
 
@@ -87,7 +85,7 @@ class FilterRecordCommand(BaseCommand):
     def __init__(self, parser) -> None:
         super().__init__(parser, FILTER_RECORD_COMMAND_CONFIG)
         self.init_config(self.parser)
-        self.parser.description = "Adds record to incomes/expenses data storage"
+        self.parser.description = "Adds record to financial accounting data storage"
 
     def __call__(self, *args, **kwargs):
         data = self.parse_args(*args, **kwargs)
