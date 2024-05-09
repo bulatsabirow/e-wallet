@@ -17,11 +17,20 @@ class CommandManager:
     }
 
     def __init__(self):
-        self.parser = argparse.ArgumentParser("Base", add_help=False)
+        self.parser = argparse.ArgumentParser(
+            "Personal financial management CLI application", add_help=False
+        )
         self.parser.add_argument(
-            "command", metavar="command", choices=self.command_list.keys()
+            "command",
+            metavar="command",
+            help=f"Action to be executed, current choices are {','.join(self.command_list)}",
+            choices=self.command_list.keys(),
         )
 
     def execute(self, *args, **kwargs):
         command = self.parser.parse_known_args(*args, **kwargs)[0].command
-        self.command_list[command](self.parser)(*args, **kwargs)
+        try:
+            self.command_list[command](self.parser)(*args, **kwargs)
+        except ValueError as exc:
+            # handle possible exceptions and output error message for user
+            self.parser.error(exc.args[0])

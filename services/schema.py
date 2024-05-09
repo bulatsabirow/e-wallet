@@ -1,4 +1,4 @@
-from argparse import Namespace
+from argparse import Namespace, ArgumentError
 from collections.abc import Iterable, Collection
 from typing import Self
 

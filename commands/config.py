@@ -17,7 +17,7 @@ def get_filter_record_command_config() -> list[CommandArguments]:
             "nargs": 2,
             "type": DateType("YYYY-MM-DD"),
             "metavar": ("date_start", "date_end"),
-            "help": "Date range",
+            "help": "Inclusive date range",
         }
     )
 
@@ -45,23 +45,29 @@ def get_edit_record_command_config() -> list[CommandArguments]:
 
 
 ADD_RECORD_COMMAND_CONFIG: list = [
-    {"name_or_flags": ["--summ", "-s"], "type": int, "help": "Sum", "required": True},
+    {
+        "name_or_flags": ["--summ", "-s"],
+        "type": int,
+        "help": "Sum of the financial operation",
+        "required": True,
+    },
     {
         "name_or_flags": ["--category", "-c"],
         "type": Category,
         "action": EnumAction,
         "required": True,
+        "help": "Financial operation category: income or expense",
     },
     {
         "name_or_flags": ["--description", "-d"],
         "type": str,
-        "help": "Description",
+        "help": "Financial operation description",
         "required": True,
     },
     {
         "name_or_flags": ["--date"],
         "type": DateType("YYYY-MM-DD"),
-        "help": "Date",
+        "help": "Financial operation date",
         "required": False,
         "default": datetime.date.today(),
     },
@@ -71,14 +77,14 @@ SHOW_BALANCE_COMMAND_CONFIG = [
     {
         "name_or_flags": ["--only-incomes"],
         "default": False,
-        "help": "Consider only incomes",
+        "help": "Calculate income balance",
         "action": "store_const",
         "const": Category.income.value,
     },
     {
         "name_or_flags": ["--only-expenses"],
         "default": False,
-        "help": "Consider only expenses",
+        "help": "Calculate expense balance",
         "action": "store_const",
         "const": Category.expense.value,
     },
