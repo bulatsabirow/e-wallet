@@ -5,6 +5,26 @@
 1. [Python >= 3.11](https://www.python.org/downloads/)
 2. [Poetry](https://pypi.org/project/poetry/)
 
+## Инструкция по запуску ##
+1. Вход в виртуальное окружение:
+    `
+    poetry shell 
+    `
+2. Установка зависимостей:
+    `
+    poetry install
+    `
+3. Инициализация линтера:
+    `
+    pre-commit install
+    `
+4. Запуск тестов:
+    `
+    pytest -s -v
+    `
+
+Пример данных содержится в `data/data.csv`.
+
 ## Описание ##
 
 Консольное приложение для управления личными финансами
