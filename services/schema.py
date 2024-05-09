@@ -8,6 +8,7 @@ import arrow.arrow
 from attr import define, field, Factory, fields, AttrsInstance
 
 from services.enums import Category
+from services.errors import ValidationErrorMessages
 
 
 @define
@@ -21,7 +22,7 @@ class FinancialOperation(AttrsInstance):
     @summ.validator
     def check(self, attribute, value):
         if value < 0:
-            raise ValueError("Operation sum must be greater than zero")
+            raise ValueError(ValidationErrorMessages.INTEGER_LESS_THAN_ZERO)
 
     def __str__(self):
         return "\n".join(

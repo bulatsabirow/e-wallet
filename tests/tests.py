@@ -8,6 +8,7 @@ import pytest
 from faker import Faker
 
 from services.enums import Category
+from services.errors import ValidationErrorMessages
 from tests.schema import TestFinancialOperation
 
 fake = Faker()
@@ -85,11 +86,11 @@ class TestAddRecord(BaseTestRecord):
             )
 
     def test_invalid_summ_parameter(self, command_test_manager, financial_operation):
-        with pytest.raises(SystemExit) as exc:
-            financial_operation.summ = fake.word()
+        with pytest.raises(ValueError) as exc:
+            financial_operation.summ = str(fake.random_int(-1000000, -1))
             self.add_record(command_test_manager, financial_operation)
 
-        assert exc.value.code == 2
+        assert exc.value.args[0] == ValidationErrorMessages.INTEGER_LESS_THAN_ZERO
 
 
 class TestEditRecord(BaseTestRecord):
@@ -113,6 +114,21 @@ class TestEditRecord(BaseTestRecord):
         for key, val in edited_financial_operation_data.items():
             if val is not None:
                 assert val == getattr(edited_financial_operation, key)
+
+    def test_edit_non_existing_record(
+        self, command_test_manager, financial_operation, edited_financial_operation_data
+    ):
+        self.add_record(command_test_manager, financial_operation)
+
+        with pytest.raises(SystemExit) as exc:
+            self.edit_record(
+                command_test_manager,
+                edited_financial_operation_data,
+                # use just created record id as it wasn't saved in csv file
+                TestFinancialOperation().id,
+            )
+
+        assert exc.value.code == 2
 
 
 class TestFilterRecord(BaseTestRecord):

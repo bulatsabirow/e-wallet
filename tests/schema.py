@@ -44,6 +44,10 @@ class TestFinancialOperation(FinancialOperation):
     date: str = field(default=Factory(fake.date))
     id: str = field(default=Factory(fake.uuid4))
 
+    @summ.validator
+    def check(self, attribute, value):
+        return super().check(attribute, int(value))
+
 
 class TestFileManager(FileManager):
     __test__ = False
